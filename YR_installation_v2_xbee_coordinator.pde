@@ -57,28 +57,33 @@ void setup()
   
   oscP5 = new OscP5(this, 15000);
   remote = new NetAddress("localhost", 15001);
+  /*
+  int value = 4095;
+  int[] bytes = toBytes(value);
+  println(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3]);
+  */
   
-  int[] payload = new int[] { command };
-  XBeeAddress64 addr64 = addresses[1];
-  ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
-  try
-  {
-    ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
-    if (res.isSuccess())
-    {
-      
-    }
-  }
-  catch (XBeeException e)
-  {
-    
-  }
+//  int[] payload = new int[] { command };
+//  XBeeAddress64 addr64 = addresses[0];
+//  ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
+//  try
+//  {
+//    ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
+//    
+//    println(res.isSuccess());
+//  }
+//  catch (XBeeException e)
+//  {
+//    
+//  }
+  
+  //command = 'h' == command ? 'l' : 'h';
+  //fdelay(1000);
 }
 
 //-----------------------------------------------------------------
 void draw()
-{
-  
+{  
   
 //  try
 //  {
@@ -143,10 +148,10 @@ void oscEvent(OscMessage msg)
   if (msg.checkAddrPattern("/tlc"))
   {
     println("- received OSC message: " + msg);
-    int pinNum = msg.get(0).intValue();
+    int target = msg.get(0).intValue();
     int value  = msg.get(1).intValue();
     
-    int[] payload = prependStartBytes(concat(new int[]{ pinNum }, toBytes(value)));
+    int[] payload = prependStartBytes(concat(toBytes(target), toBytes(value)));
     print("- data: ");
     for (int i = 0; i < payload.length; ++i)
     {
