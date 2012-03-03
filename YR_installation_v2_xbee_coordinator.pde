@@ -92,7 +92,7 @@ void draw()
     XBeeResponse response = xbee.getResponse(500);
     
     //XBeeResponse response = xbee.getResponse();
-    if (response.getApiId() == ApiId.ZNET_RX_RESPONSE) {
+    if (!(response.isError()) && (response.getApiId() == ApiId.ZNET_RX_RESPONSE)) {
         ZNetRxResponse zrRes = (ZNetRxResponse) response;
         
         println("Received a sample from " + zrRes.getRemoteAddress64());
