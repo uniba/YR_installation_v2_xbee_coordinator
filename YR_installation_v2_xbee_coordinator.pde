@@ -34,6 +34,8 @@ ArrayList nodes = new ArrayList();
 
 float lastNodeDiscovery;
 
+int prevReceive = 0;
+
 OscP5 oscP5;
 NetAddress remote;
 
@@ -85,15 +87,52 @@ void setup()
 void draw()
 {  
   
-//  try
-//  {
-//    XBeeResponse response = xbee.getResponse();
-//  }
-//  catch (XBeeException e)
-//  {
-//    
-//  }
-//  
+  try
+  {
+    XBeeResponse response = xbee.getResponse(500);
+    
+    //XBeeResponse response = xbee.getResponse();
+    if (response.getApiId() == ApiId.ZNET_RX_RESPONSE) {
+        ZNetRxResponse zrRes = (ZNetRxResponse) response;
+        
+        println("Received a sample from " + zrRes.getRemoteAddress64());
+
+        int[] data = zrRes.getData();
+        for (int i = 0; i < data.length; i++)
+        {
+          println("raw data " + i + " is -> " + data[i]);
+        }
+        int val = (data[0] << 8) + data[1];
+        println("val is " + val);
+
+        /*
+        println("millis " + millis());
+        println("prevs " + prevReceive);x
+        if ((val < 100) && (millis() - prevReceive > 3000)) {
+          XBeeAddress64 addr64 = addresses[2];
+          int[] payload = {0x00, 0x07, 0x8b, 0x01, 0x28, 0xf7, 0x00, 0x00, 0x00, 0x54};
+          ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
+          try
+          {
+            ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
+            if (res.isSuccess())
+            {
+              println("\n===== successfully remove data =====\n");
+            }
+          }
+          catch(Exception e) {
+          }
+        } else {   
+          prevReceive = millis(); 
+        }
+        */
+    }
+  }
+  catch (XBeeException e)
+  {
+    
+  }
+  
 //  if (millis() - lastNodeDiscovery > 15 * 60 * 1000)
 //  {
 //    nodeDiscovery();
@@ -161,7 +200,7 @@ void oscEvent(OscMessage msg)
         print(payload[i]);
     }
     println("");
-    XBeeAddress64 addr64 = addresses[0];
+    XBeeAddress64 addr64 = addresses[2];
     ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
     try
     {
