@@ -200,7 +200,7 @@ void oscEvent(OscMessage msg)
         print(payload[i]);
     }
     println("");
-    XBeeAddress64 addr64 = addresses[2];
+    XBeeAddress64 addr64 = addresses[0];
     ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
     try
     {

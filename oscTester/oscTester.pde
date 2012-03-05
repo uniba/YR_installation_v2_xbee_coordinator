@@ -33,8 +33,6 @@ void setup()
   led.setSpacingColumn(20);
  
   device.addItem("0", 1);
-  
-  
   device.addItem("1", 2);
   device.addItem("2", 4);
   device.addItem("3", 8);
@@ -99,5 +97,4 @@ void submit(int buttonValue) {
   oscP5.send(message, myRemoteLocation); 
 
 }
-
 
