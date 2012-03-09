@@ -83,13 +83,15 @@ void submit(int buttonValue) {
   
   println("submit:" + deviceValue + " " + ledValue + " " + value + " " + time);
   
-  int target = (deviceValue << 16) + ledValue;
+  int device = deviceValue;
+  int target = ledValue;
   int data = (value << 16) + time;
 
   println("submit raw:" + target + " / " + data);
 
   OscMessage message = new OscMessage("/tlc");
   
+  message.add(device); /* add an int to the osc message */
   message.add(target); /* add an int to the osc message */
   message.add(data); /* add an int to the osc message */
 

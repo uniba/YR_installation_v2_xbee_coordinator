@@ -187,10 +187,11 @@ void oscEvent(OscMessage msg)
   if (msg.checkAddrPattern("/tlc"))
   {
     println("- received OSC message: " + msg);
-    int target = msg.get(0).intValue();
-    int value  = msg.get(1).intValue();
+    int device = msg.get(0).intValue();
+    int target = msg.get(1).intValue();
+    int value  = msg.get(2).intValue();
     
-    int[] payload = prependStartBytes(concat(toBytes(target), toBytes(value)));
+    int[] payload = prependStartBytes(concat(toBytes(device), concat(toBytes(target), toBytes(value))));
     print("- data: ");
     for (int i = 0; i < payload.length; ++i)
     {
@@ -200,7 +201,15 @@ void oscEvent(OscMessage msg)
         print(payload[i]);
     }
     println("");
-    XBeeAddress64 addr64 = addresses[0];
+    
+    println("//////////////////////////////////////////////////////////////////////");
+    println("payload[5] = " + payload[5]);
+    println("(payload[8] << 8) + payload[9] = " + ((payload[8] << 8) + payload[9]));
+    println("(payload[10] << 8) + payload[11] = " + ((payload[10] << 8) + payload[11]));
+    println("(payload[12] << 8) + payload[13] = " + ((payload[12] << 8) + payload[13]));
+    println("//////////////////////////////////////////////////////////////////////");
+    
+    XBeeAddress64 addr64 = addresses[1];
     ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
     try
     {
