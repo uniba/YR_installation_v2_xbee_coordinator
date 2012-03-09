@@ -32,28 +32,11 @@ void setup()
   led.setItemsPerRow(8);
   led.setSpacingColumn(20);
  
-  device.addItem("0", 1);
-  device.addItem("1", 2);
-  device.addItem("2", 4);
-  device.addItem("3", 8);
-  device.addItem("4", 16);
+  for(int i = 0; i < 5; i++)
+    device.addItem("" + i, 1 << i);
 
-  led.addItem("0", 1);
-  led.addItem("1", 2);
-  led.addItem("2", 4);
-  led.addItem("3", 8);
-  led.addItem("4", 16);
-  led.addItem("5", 32);
-  led.addItem("6", 64);
-  led.addItem("7", 128);
-  led.addItem("8", 256);
-  led.addItem("9", 512);
-  led.addItem("10", 1024);
-  led.addItem("11", 2048);
-  led.addItem("12", 4096);
-  led.addItem("13", 8192);
-  led.addItem("14", 16386);
-  led.addItem("15", 32772);
+  for(int i = 0; i < 32; i++)
+    led.addItem("" + i, 1 << i);
   
   controlP5.addSlider("time",0,65535,128,40,160,10,100);
   controlP5.addSlider("value",0,4095,128,140,160,10,100);

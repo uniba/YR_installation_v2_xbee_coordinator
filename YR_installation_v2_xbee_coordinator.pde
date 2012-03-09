@@ -204,7 +204,7 @@ void oscEvent(OscMessage msg)
     
     println("//////////////////////////////////////////////////////////////////////");
     println("payload[5] = " + payload[5]);
-    println("(payload[8] << 8) + payload[9] = " + ((payload[8] << 8) + payload[9]));
+    println("(payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9] = " + ((payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9]));
     println("(payload[10] << 8) + payload[11] = " + ((payload[10] << 8) + payload[11]));
     println("(payload[12] << 8) + payload[13] = " + ((payload[12] << 8) + payload[13]));
     println("//////////////////////////////////////////////////////////////////////");
