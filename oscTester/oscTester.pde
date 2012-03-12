@@ -60,22 +60,26 @@ void submit(int buttonValue) {
   for(int i = 0; i < 5; i++)
     deviceValue += (device.arrayValue()[i] != 0 ? 1 : 0) << i;
 
-  int ledValue = 0;
-  for(int i = 0; i < 16; i++)
-    ledValue += (led.arrayValue()[i] != 0 ? 1 : 0) << i;
-  
-  println("submit:" + deviceValue + " " + ledValue + " " + value + " " + time);
+  int ledValue1 = 0, ledValue2 = 0;
+  for(int i = 0; i < 16; i++) {
+    ledValue1 += (led.arrayValue()[i] != 0 ? 1 : 0) << i;
+    ledValue2 += (led.arrayValue()[16 + i] != 0 ? 1 : 0) << i;
+  }
+    
+  println("submit:" + deviceValue + " " + ledValue1 + " " + ledValue2 + " " + value + " " + time);
   
   int device = deviceValue;
-  int target = ledValue;
+  int target1 = ledValue1;
+  int target2 = ledValue2;
   int data = (value << 16) + time;
 
-  println("submit raw:" + target + " / " + data);
+  println("submit raw:" + target1 + " / " + target2 + " / " + data);
 
   OscMessage message = new OscMessage("/tlc");
   
   message.add(device); /* add an int to the osc message */
-  message.add(target); /* add an int to the osc message */
+  message.add(target1); /* add an int to the osc message */
+  message.add(target2);
   message.add(data); /* add an int to the osc message */
 
   /* send the message */

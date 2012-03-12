@@ -188,10 +188,11 @@ void oscEvent(OscMessage msg)
   {
     println("- received OSC message: " + msg);
     int device = msg.get(0).intValue();
-    int target = msg.get(1).intValue();
-    int value  = msg.get(2).intValue();
+    int target1 = msg.get(1).intValue();
+    int target2 = msg.get(2).intValue();
+    int value  = msg.get(3).intValue();
     
-    int[] payload = prependStartBytes(concat(toBytes(device), concat(toBytes(target), toBytes(value))));
+    int[] payload = prependStartBytes(concat(toBytes(device), concat(toBytes(target1), concat(toBytes(target2), toBytes(value)))));
     print("- data: ");
     for (int i = 0; i < payload.length; ++i)
     {
@@ -203,13 +204,16 @@ void oscEvent(OscMessage msg)
     println("");
     
     println("//////////////////////////////////////////////////////////////////////");
+    int _target1 = (payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9];
+    int _target2 = (payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13];
     println("payload[5] = " + payload[5]);
     println("(payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9] = " + ((payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9]));
-    println("(payload[10] << 8) + payload[11] = " + ((payload[10] << 8) + payload[11]));
-    println("(payload[12] << 8) + payload[13] = " + ((payload[12] << 8) + payload[13]));
+    println("(payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13] = " + ((payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13]));
+    println("(payload[14] << 8) + payload[15] = " + ((payload[14] << 8) + payload[15]));
+    println("(payload[16] << 8) + payload[17] = " + ((payload[16] << 8) + payload[17]));
     println("//////////////////////////////////////////////////////////////////////");
     
-    XBeeAddress64 addr64 = addresses[1];
+    XBeeAddress64 addr64 = XBeeAddress64.BROADCAST;//addresses[1];
     ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
     try
     {
