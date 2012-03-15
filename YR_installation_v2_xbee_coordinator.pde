@@ -20,12 +20,25 @@ import netP5.*;
 String mySerialPort = "/dev/tty.usbserial-A600eLw9";
 XBee xbee = new XBee();
 int error = 0;
-final int[] START_BYTES = { 0x22, 0x75 };
+
+final String MODE_A = "A";
+final String MODE_B = "B";
+final String MODE_C = "C";
+final String MODE_D = "D";
+final String MODE_E = "E";
+
+final int[] START_BYTES_FOR_MODE_A = { 0x22, 0x75 };
+final int[] START_BYTES_FOR_MODE_B = { 0x22, 0x76 };
+final int[] START_BYTES_FOR_MODE_C = { 0x22, 0x77 };
+final int[] START_BYTES_FOR_MODE_D = { 0x22, 0x78 };
+final int[] START_BYTES_FOR_MODE_E = { 0x22, 0x79 };
 
 XBeeAddress64[] addresses = {
   new XBeeAddress64(0x0, 0x13, 0xa2, 0x0, 0x40, 0x69, 0x2d, 0x71),
   new XBeeAddress64(0x0, 0x13, 0xa2, 0x0, 0x40, 0x6e, 0x8b, 0xce),
   new XBeeAddress64(0x0, 0x13, 0xa2, 0x0, 0x40, 0x69, 0x2d, 0x1c),
+  new XBeeAddress64(0x0, 0x13, 0xa2, 0x0, 0x40, 0x8a, 0x5a, 0x52),
+  new XBeeAddress64(0x0, 0x13, 0xa2, 0x0, 0x40, 0x8a, 0x5a, 0x57),
 };
 
 int command = 'h';
@@ -59,85 +72,12 @@ void setup()
   
   oscP5 = new OscP5(this, 15000);
   remote = new NetAddress("localhost", 15001);
-  /*
-  int value = 4095;
-  int[] bytes = toBytes(value);
-  println(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3]);
-  */
   
-//  int[] payload = new int[] { command };
-//  XBeeAddress64 addr64 = addresses[0];
-//  ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
-//  try
-//  {
-//    ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
-//    
-//    println(res.isSuccess());
-//  }
-//  catch (XBeeException e)
-//  {
-//    
-//  }
-  
-  //command = 'h' == command ? 'l' : 'h';
-  //fdelay(1000);
 }
 
 //-----------------------------------------------------------------
 void draw()
-{  
-  
-  try
-  {
-    XBeeResponse response = xbee.getResponse(500);
-    
-    //XBeeResponse response = xbee.getResponse();
-    if (!(response.isError()) && (response.getApiId() == ApiId.ZNET_RX_RESPONSE)) {
-        ZNetRxResponse zrRes = (ZNetRxResponse) response;
-        
-        println("Received a sample from " + zrRes.getRemoteAddress64());
-
-        int[] data = zrRes.getData();
-        for (int i = 0; i < data.length; i++)
-        {
-          println("raw data " + i + " is -> " + data[i]);
-        }
-        int val = (data[0] << 8) + data[1];
-        println("val is " + val);
-
-        /*
-        println("millis " + millis());
-        println("prevs " + prevReceive);x
-        if ((val < 100) && (millis() - prevReceive > 3000)) {
-          XBeeAddress64 addr64 = addresses[2];
-          int[] payload = {0x00, 0x07, 0x8b, 0x01, 0x28, 0xf7, 0x00, 0x00, 0x00, 0x54};
-          ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
-          try
-          {
-            ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
-            if (res.isSuccess())
-            {
-              println("\n===== successfully remove data =====\n");
-            }
-          }
-          catch(Exception e) {
-          }
-        } else {   
-          prevReceive = millis(); 
-        }
-        */
-    }
-  }
-  catch (XBeeException e)
-  {
-    
-  }
-  
-//  if (millis() - lastNodeDiscovery > 15 * 60 * 1000)
-//  {
-//    nodeDiscovery();
-//    lastNodeDiscovery = millis();
-//  }
+{
 }
 
 //-----------------------------------------------------------------
@@ -184,18 +124,17 @@ void nodeDiscovery()
 //-----------------------------------------------------------------
 void oscEvent(OscMessage msg)
 {
-  if (msg.checkAddrPattern("/tlc"))
-  {
-    println("- received OSC message: " + msg);
-    int device = msg.get(0).intValue();
-    int target1 = msg.get(1).intValue();
-    int target2 = msg.get(2).intValue();
-    int value  = msg.get(3).intValue();
-    
-    int[] payload = prependStartBytes(concat(toBytes(device), concat(toBytes(target1), concat(toBytes(target2), toBytes(value)))));
+  println("\n=*=*=*=*=*=*=*=*= OscMessage received =*=*=*=*=*=*=*=*=");
+  if (msg.checkAddrPattern("/tlc")) {
+    String mode = msg.get(0).stringValue();
+    int device = msg.get(1).intValue();
+    int target1 = msg.get(2).intValue();
+    int target2 = msg.get(3).intValue();
+    int value  = msg.get(4).intValue();
+    println("========== MODE = " + mode + " ===========");
+    int[] payload = prependStartBytes(mode, concat(toBytes(device), concat(toBytes(target1), concat(toBytes(target2), toBytes(value)))));
     print("- data: ");
-    for (int i = 0; i < payload.length; ++i)
-    {
+    for (int i = 0; i < payload.length; ++i) {
       if (payload.length - 1 != i)
         print(payload[i] + ":");
       else
@@ -203,31 +142,36 @@ void oscEvent(OscMessage msg)
     }
     println("");
     
-    println("//////////////////////////////////////////////////////////////////////");
-    int _target1 = (payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9];
-    int _target2 = (payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13];
-    println("payload[5] = " + payload[5]);
-    println("(payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9] = " + ((payload[6] << 24) + (payload[7] << 16) + (payload[8] << 8) + payload[9]));
-    println("(payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13] = " + ((payload[10] << 24) + (payload[11] << 16) + (payload[12] << 8) + payload[13]));
-    println("(payload[14] << 8) + payload[15] = " + ((payload[14] << 8) + payload[15]));
-    println("(payload[16] << 8) + payload[17] = " + ((payload[16] << 8) + payload[17]));
-    println("//////////////////////////////////////////////////////////////////////");
-    
-    XBeeAddress64 addr64 = XBeeAddress64.BROADCAST;//addresses[1];
-    ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
-    try
-    {
-      ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
-      if (res.isSuccess())
-      {
-        println("\n===== successfully sent data =====\n");
+    if (32 == device) {
+      ZNetTxRequest tx = new ZNetTxRequest(XBeeAddress64.BROADCAST, payload);
+      try {
+        ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
+        if (res.isSuccess()) {
+          println("\n===== Successfully sent data! Address = " + XBeeAddress64.BROADCAST + " =====\n");
+        }
+      } catch (XBeeException e) {
+        println("\n===== ERROR!! =====\n" + e);
+      }
+    } else {
+      for (int i = 0; i < 5; ++i) {
+        if ((device & (1 << i)) != 0) {
+          XBeeAddress64 addr64 = addresses[i];
+          ZNetTxRequest tx = new ZNetTxRequest(addr64, payload);
+          try {
+            xbee.sendAsynchronous(tx);
+//            ZNetTxStatusResponse res = (ZNetTxStatusResponse) xbee.sendSynchronous(tx);
+//            if (res.isSuccess()) {
+//              println("\n===== Successfully sent data! Address = " + addr64 + " =====\n");
+//            }
+          } catch (XBeeException e) {
+            println("\n===== ERROR!! Device address = " + addr64 + " =====\n" + e);
+          }
+        }
       }
     }
-    catch (XBeeException e)
-    {
-      
-    }
+   xbee.clearResponseQueue();
   }
+  println("\n=*=*=*=*=*=*=*=*= OscMessage end =*=*=*=*=*=*=*=*=");
 }
 
 //-----------------------------------------------------------------
@@ -249,28 +193,49 @@ int[] prepend(int[] values, int val)
 }
 
 //-----------------------------------------------------------------
-int[] prependStartBytes(int[] values)
+int[] prependStartBytes(String mode, int[] values)
 {
-  if (START_BYTES[0] == values[0] && START_BYTES[1] == values[1])
-  {
-    return values;
+  if (mode.equals(MODE_A)) {
+    println("- mode A");
+    if (START_BYTES_FOR_MODE_A[0] == values[0] && START_BYTES_FOR_MODE_A[1] == values[1]) {
+      return values;
+    } else {
+      return concat(START_BYTES_FOR_MODE_A, values);
+    }
+  } else if (mode.equals(MODE_B)) {
+    println("- mode B");
+    if (START_BYTES_FOR_MODE_B[0] == values[0] && START_BYTES_FOR_MODE_B[1] == values[1]) {
+      return values;
+    } else {
+      return concat(START_BYTES_FOR_MODE_B, values);
+    }
+  } else if (mode.equals(MODE_C)) {
+    println("- mode C");
+    if (START_BYTES_FOR_MODE_C[0] == values[0] && START_BYTES_FOR_MODE_C[1] == values[1]) {
+      return values;
+    } else {
+      return concat(START_BYTES_FOR_MODE_C, values);
+    }
+  } else if (mode.equals(MODE_D)) {
+    println("- mode D");
+    if (START_BYTES_FOR_MODE_D[0] == values[0] && START_BYTES_FOR_MODE_D[1] == values[1]) {
+      return values;
+    } else {
+      return concat(START_BYTES_FOR_MODE_D, values);
+    }
+  } else if (mode.equals(MODE_E)) {
+    println("- mode E");
+    if (START_BYTES_FOR_MODE_E[0] == values[0] && START_BYTES_FOR_MODE_E[1] == values[1]) {
+      return values;
+    } else {
+      return concat(START_BYTES_FOR_MODE_E, values);
+    }
+  } else {
+    println("- mode not found.");
+    // default
+    return concat(START_BYTES_FOR_MODE_A, values);
   }
-  return concat(START_BYTES, values);
 }
-
-//-----------------------------------------------------------------
-int[] insertDataLength(int[] values)
-{
-  int[] temp = new int[values.length];
-  arrayCopy(values, temp);
-  if (START_BYTES[0] != temp[0] && START_BYTES[1] != temp[1])
-  {
-    temp = prependStartBytes(temp);
-  }
-  
-  return splice(temp, temp.length - START_BYTES.length, 2);
-}
-
 
 
 //-----------------------------------------------------------------
