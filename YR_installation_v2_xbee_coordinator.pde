@@ -78,6 +78,7 @@ void setup()
 //-----------------------------------------------------------------
 void draw()
 {
+ 
 }
 
 //-----------------------------------------------------------------
@@ -125,6 +126,9 @@ void nodeDiscovery()
 void oscEvent(OscMessage msg)
 {
   println("\n=*=*=*=*=*=*=*=*= OscMessage received =*=*=*=*=*=*=*=*=");
+  println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+  println("XBee.isConnected = " + xbee.isConnected());
+  println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   if (msg.checkAddrPattern("/tlc")) {
     String mode = msg.get(0).stringValue();
     int device = msg.get(1).intValue();
